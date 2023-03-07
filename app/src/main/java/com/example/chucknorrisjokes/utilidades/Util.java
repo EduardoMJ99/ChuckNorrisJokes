@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * Clase encargada de leer el archivo config.properties dentro de assets.
+ */
 public class Util {
 
     public static String getProperty(String key, Context context) throws IOException {
