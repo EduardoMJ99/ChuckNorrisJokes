@@ -6,6 +6,8 @@ import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -22,6 +24,7 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.chucknorrisjokes.entitys.Joke;
+import com.example.chucknorrisjokes.utilidades.ConexionSQLiteHelper;
 import com.example.chucknorrisjokes.utilidades.JokeAdapter;
 
 import org.json.JSONException;
@@ -32,12 +35,13 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    RecyclerView recyclerJokes;
-    JokeAdapter jokeAdapter;
-    List<Joke> listJokes;
-    NestedScrollView nestedSV;
-    ProgressBar pbLoading;
-    int requestCount;
+    ConexionSQLiteHelper conn;
+    private RecyclerView recyclerJokes;
+    private JokeAdapter jokeAdapter;
+    private List<Joke> listJokes;
+    private NestedScrollView nestedSV;
+    private ProgressBar pbLoading;
+    private int requestCount;
     public static ImageLoader imageLoader;
 
     @Override
@@ -48,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
         recyclerJokes = findViewById(R.id.recyclerJokes);
         nestedSV = findViewById(R.id.nestedSV);
         pbLoading = findViewById(R.id.pbLoading);
+        conn = new ConexionSQLiteHelper(this,
+                "chucknorris",
+                null,
+                1);
 
         listJokes = new ArrayList<>();
         requestCount = 0;
@@ -74,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 if (scrollY == v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight()) {
                     pbLoading.setVisibility(View.VISIBLE);
                     getDataFromEndpoint();
+                    //getDataFromDatabase();
                 }
             }
         });
@@ -83,15 +92,18 @@ public class MainActivity extends AppCompatActivity {
     private void getDataFromEndpoint() {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "https://api.chucknorris.io/jokes/random?category=dev";
+        List<Joke> endpointResults = new ArrayList<>();
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
                     requestCount++;
-                    listJokes.add(new Joke(new String[] {response.getString("icon_url"), response.getString("value")}));
+                    endpointResults.add(new Joke(new String[] {response.getString("icon_url"), response.getString("value")}));
                     if(requestCount == 10) {
                         requestCount = 0;
-                        llenarRecycler();
+                        listJokes.addAll(endpointResults);
+                        llenarRecycler(listJokes);
+                        insertDataOnDatabase(endpointResults);
                     }
                 } catch (JSONException e) {
                     requestCount++;
@@ -108,9 +120,28 @@ public class MainActivity extends AppCompatActivity {
             queue.add(jsonObjectRequest);
         }
     }
+    
+    private void getDataFromDatabase() {
+        SQLiteDatabase db = conn.getReadableDatabase();
+        List<Joke> databaseResults = new ArrayList<>();
+        Cursor cursor = ConexionSQLiteHelper.retrieveJokes(db);
+        while (cursor.moveToNext()){
+            databaseResults.add(new Joke(cursor));
+        }
+        llenarRecycler(databaseResults);
+    }
 
-    private void llenarRecycler(){
-        jokeAdapter = new JokeAdapter(listJokes);
+    private void insertDataOnDatabase(List<Joke> newJokes) {
+        SQLiteDatabase db = conn.getWritableDatabase();
+        for (Joke element:
+             newJokes) {
+            element.setValue(element.getValue().replace("'","''"));
+            ConexionSQLiteHelper.insertJoke(db,element);
+        }
+    }
+
+    private void llenarRecycler(List<Joke> jokesToShow){
+        jokeAdapter = new JokeAdapter(jokesToShow);
         recyclerJokes.setAdapter(jokeAdapter);
         recyclerJokes.setLayoutManager(new LinearLayoutManager(this));
     }

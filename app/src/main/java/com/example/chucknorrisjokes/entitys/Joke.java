@@ -8,8 +8,8 @@ public class Joke {
     private String value;
 
     public Joke(Cursor cursor) {
-        this.urlIcon = cursor.getString(0);
-        this.value = cursor.getString(1);
+        this.urlIcon = cursor.getString(1);
+        this.value = cursor.getString(2);
     }
 
     public Joke(String[] values) {
@@ -23,5 +23,9 @@ public class Joke {
 
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }
