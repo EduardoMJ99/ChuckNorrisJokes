@@ -12,6 +12,7 @@
         android:orientation="horizontal">
 
         <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgIcon"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/ic_launcher_foreground"
@@ -19,6 +20,7 @@
             app:shapeAppearanceOverlay="@style/roundedImageViewRounded"/>
 
         <TextView
+            android:id="@+id/txtValue"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
