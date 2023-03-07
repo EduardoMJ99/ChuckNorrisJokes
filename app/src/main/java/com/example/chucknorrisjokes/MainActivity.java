@@ -7,15 +7,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.LruCache;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Joke> listJokes;
     private NestedScrollView nestedSV;
     private ProgressBar pbLoading;
+    private Button btnConnecToInternet;
     private int requestCount;
     public static ImageLoader imageLoader;
 
@@ -55,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerJokes = findViewById(R.id.recyclerJokes);
         nestedSV = findViewById(R.id.nestedSV);
         pbLoading = findViewById(R.id.pbLoading);
+        btnConnecToInternet = findViewById(R.id.btnConnectoToInternet);
         conn = new ConexionSQLiteHelper(this,
                 "chucknorris",
                 null,
@@ -62,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
         listJokes = new ArrayList<>();
         requestCount = 0;
-        getDataFromEndpoint();
 
         RequestQueue queueImages = Volley.newRequestQueue(this);
         imageLoader = new ImageLoader(queueImages, new ImageLoader.ImageCache() {
@@ -85,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
                 if (scrollY == v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight()) {
                     getData();
                 }
+            }
+        });
+
+        btnConnecToInternet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
             }
         });
 
@@ -130,6 +140,10 @@ public class MainActivity extends AppCompatActivity {
         while (cursor.moveToNext()){
             databaseResults.add(new Joke(cursor));
         }
+        if(databaseResults.isEmpty()) {
+            Toast.makeText(this,"No hay bromas para mostrar.",Toast.LENGTH_LONG).show();
+            btnConnecToInternet.setVisibility(View.VISIBLE);
+        }
         listJokes.addAll(databaseResults);
         llenarRecycler(listJokes);
     }
@@ -167,9 +181,11 @@ public class MainActivity extends AppCompatActivity {
         if(isNetworkConnected() || internetIsConnected()) {
             getDataFromEndpoint();
             pbLoading.setVisibility(View.VISIBLE);
+            btnConnecToInternet.setVisibility(View.GONE);
         } else {
             if(listJokes.isEmpty()) {
                 getDataFromDatabase();
+                btnConnecToInternet.setVisibility(View.GONE);
             }
             pbLoading.setVisibility(View.GONE);
         }
