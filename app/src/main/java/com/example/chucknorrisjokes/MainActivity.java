@@ -2,6 +2,7 @@ package com.example.chucknorrisjokes;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -10,6 +11,8 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.LruCache;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView recyclerJokes;
     JokeAdapter jokeAdapter;
     List<Joke> listJokes;
+    NestedScrollView nestedSV;
+    ProgressBar pbLoading;
     int requestCount;
     public static ImageLoader imageLoader;
 
@@ -41,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         recyclerJokes = findViewById(R.id.recyclerJokes);
+        nestedSV = findViewById(R.id.nestedSV);
+        pbLoading = findViewById(R.id.pbLoading);
+
         listJokes = new ArrayList<>();
         requestCount = 0;
         getDataFromEndpoint();
@@ -60,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        nestedSV.setOnScrollChangeListener(new NestedScrollView.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+                if (scrollY == v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight()) {
+                    pbLoading.setVisibility(View.VISIBLE);
+                    getDataFromEndpoint();
+                }
+            }
+        });
+
     }
 
     private void getDataFromEndpoint() {
@@ -71,13 +89,12 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     requestCount++;
                     listJokes.add(new Joke(new String[] {response.getString("icon_url"), response.getString("value")}));
-                    Log.i("ChuckNorris", "Pass");
-                    if(requestCount == 5) {
+                    if(requestCount == 10) {
+                        requestCount = 0;
                         llenarRecycler();
                     }
                 } catch (JSONException e) {
                     requestCount++;
-                    Log.i("ChuckNorris", "Fail");
                 }
             }
         }, new Response.ErrorListener() {
@@ -87,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        for(int cont=0;cont<5;cont++) {
+        for(int cont=0;cont<10;cont++) {
             queue.add(jsonObjectRequest);
         }
     }
