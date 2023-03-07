@@ -6,15 +6,18 @@ import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.util.LruCache;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -35,7 +38,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ConexionSQLiteHelper conn;
+    private ConexionSQLiteHelper conn;
     private RecyclerView recyclerJokes;
     private JokeAdapter jokeAdapter;
     private List<Joke> listJokes;
@@ -80,13 +83,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
                 if (scrollY == v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight()) {
-                    pbLoading.setVisibility(View.VISIBLE);
-                    getDataFromEndpoint();
-                    //getDataFromDatabase();
+                    getData();
                 }
             }
         });
 
+        getData();
     }
 
     private void getDataFromEndpoint() {
@@ -128,7 +130,8 @@ public class MainActivity extends AppCompatActivity {
         while (cursor.moveToNext()){
             databaseResults.add(new Joke(cursor));
         }
-        llenarRecycler(databaseResults);
+        listJokes.addAll(databaseResults);
+        llenarRecycler(listJokes);
     }
 
     private void insertDataOnDatabase(List<Joke> newJokes) {
@@ -144,5 +147,31 @@ public class MainActivity extends AppCompatActivity {
         jokeAdapter = new JokeAdapter(jokesToShow);
         recyclerJokes.setAdapter(jokeAdapter);
         recyclerJokes.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null;
+    }
+
+    private boolean internetIsConnected() {
+        try {
+            String command = "ping -c 1 google.com";
+            return (Runtime.getRuntime().exec(command).waitFor() == 0);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void getData() {
+        if(isNetworkConnected() || internetIsConnected()) {
+            getDataFromEndpoint();
+            pbLoading.setVisibility(View.VISIBLE);
+        } else {
+            if(listJokes.isEmpty()) {
+                getDataFromDatabase();
+            }
+            pbLoading.setVisibility(View.GONE);
+        }
     }
 }
