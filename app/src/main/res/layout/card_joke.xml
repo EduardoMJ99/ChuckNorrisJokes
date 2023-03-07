@@ -13,17 +13,18 @@
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imgIcon"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/ic_launcher_foreground"
-            android:padding="5dp"
-            app:shapeAppearanceOverlay="@style/roundedImageViewRounded"/>
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/chuck_norris"
+            app:shapeAppearanceOverlay="@style/roundedImageViewRounded" />
 
         <TextView
             android:id="@+id/txtValue"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_gravity="center"
             android:textColor="@color/black"
             android:text="Test"/>
     </LinearLayout>
