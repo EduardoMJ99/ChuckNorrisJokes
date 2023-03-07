@@ -1,6 +1,5 @@
 package com.example.chucknorrisjokes.utilidades;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +7,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.example.chucknorrisjokes.MainActivity;
 import com.example.chucknorrisjokes.R;
 import com.example.chucknorrisjokes.entitys.Joke;
 
@@ -17,30 +18,30 @@ import java.util.List;
 public class JokeAdapter extends RecyclerView.Adapter<JokeViewHolder> {
 
     List<Joke> listResults = Collections.emptyList();
-    Context context;
 
-    public JokeAdapter(List<Joke> list, Context context) {
+    public JokeAdapter(List<Joke> list) {
         this.listResults = list;
-        this.context = context;
     }
 
     @NonNull
     @Override
-    public JokeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View jokeView = inflater.inflate(R.layout.card_joke, parent, false);
-        JokeViewHolder jokeViewHolder = new JokeViewHolder(jokeView);
-        return jokeViewHolder;
+    public JokeViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        View jokeView =
+               LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.card_joke, viewGroup, false);
+        return new JokeViewHolder(jokeView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull JokeViewHolder holder, int position) {
-
+        holder.getTxtValue().setText(listResults.get(position).getValue());
+        MainActivity.imageLoader.get(listResults.get(position).getUrlIcon(),
+                ImageLoader.getImageListener(holder.getImgIcon(),
+                        R.drawable.loading,
+                        R.drawable.chuck_norris));
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return listResults.size();
     }
 }

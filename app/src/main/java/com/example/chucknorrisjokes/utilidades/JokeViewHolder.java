@@ -20,4 +20,12 @@ public class JokeViewHolder extends RecyclerView.ViewHolder {
         txtValue = itemView.findViewById(R.id.txtValue);
         view = itemView;
     }
+
+    public TextView getTxtValue() {
+        return txtValue;
+    }
+
+    public ImageView getImgIcon() {
+        return imgIcon;
+    }
 }
