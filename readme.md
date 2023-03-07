@@ -12,4 +12,5 @@
 
 #### Informacion
 Por el momento la imagen que retorna el endpoint bajo el parametro de "icon_url" parece no funcionar (https://assets.chucknorris.host/img/avatar/chuck-norris.png), indica un "not found" al intentar hacer un llamado a esta. Dado esto, en el codigo si esta llamada a esta URL falla, por default carga la imagen de Chuck Norris avatar que esta dentro del proyecto como solucion alternativa a esto.
+
 ![Chuck Norris Avatar](/app/src/main/res/drawable/chuck_norris.png "San Juan Mountains")
