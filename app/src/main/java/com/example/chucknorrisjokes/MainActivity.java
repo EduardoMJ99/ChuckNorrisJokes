@@ -31,10 +31,13 @@ import com.android.volley.toolbox.Volley;
 import com.example.chucknorrisjokes.entitys.Joke;
 import com.example.chucknorrisjokes.utilidades.ConexionSQLiteHelper;
 import com.example.chucknorrisjokes.utilidades.JokeAdapter;
+import com.example.chucknorrisjokes.utilidades.Util;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar pbLoading;
     private Button btnConnecToInternet;
     private int requestCount;
+    private String urlToRequest;
+    private String dbName;
     public static ImageLoader imageLoader;
 
     @Override
@@ -55,17 +60,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initialSetup();
+
         recyclerJokes = findViewById(R.id.recyclerJokes);
         nestedSV = findViewById(R.id.nestedSV);
         pbLoading = findViewById(R.id.pbLoading);
         btnConnecToInternet = findViewById(R.id.btnConnectoToInternet);
         conn = new ConexionSQLiteHelper(this,
-                "chucknorris",
+                dbName,
                 null,
                 1);
 
         listJokes = new ArrayList<>();
-        requestCount = 0;
 
         RequestQueue queueImages = Volley.newRequestQueue(this);
         imageLoader = new ImageLoader(queueImages, new ImageLoader.ImageCache() {
@@ -103,22 +109,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void getDataFromEndpoint() {
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "https://api.chucknorris.io/jokes/random?category=dev";
         List<Joke> endpointResults = new ArrayList<>();
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, urlToRequest, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    requestCount++;
+                    requestCount--;
                     endpointResults.add(new Joke(new String[] {response.getString("icon_url"), response.getString("value")}));
-                    if(requestCount == 10) {
-                        requestCount = 0;
+                    if(requestCount == 0) {
+                        requestCount = 10;
                         listJokes.addAll(endpointResults);
                         llenarRecycler(listJokes);
                         insertDataOnDatabase(endpointResults);
                     }
                 } catch (JSONException e) {
-                    requestCount++;
+                    requestCount--;
                 }
             }
         }, new Response.ErrorListener() {
@@ -128,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        for(int cont=0;cont<10;cont++) {
+        for(int cont=0;cont<requestCount;cont++) {
             queue.add(jsonObjectRequest);
         }
     }
@@ -188,6 +193,18 @@ public class MainActivity extends AppCompatActivity {
                 btnConnecToInternet.setVisibility(View.GONE);
             }
             pbLoading.setVisibility(View.GONE);
+        }
+    }
+
+    public void initialSetup() {
+        try {
+            urlToRequest = Util.getProperty("urlToRequest", this);
+            dbName = Util.getProperty("dbName", this);
+            requestCount = Integer.parseInt(Util.getProperty("requestCount", this));
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: properties file not found.");
+        } catch (IOException e) {
+            System.out.println("Error: unable to read properties file.");
         }
     }
 }
